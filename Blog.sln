@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30330.147
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RubiconTask", "RubiconTask.csproj", "{9DE8A716-39A9-423D-9223-6933EA1A1B9A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9DE8A716-39A9-423D-9223-6933EA1A1B9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DE8A716-39A9-423D-9223-6933EA1A1B9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DE8A716-39A9-423D-9223-6933EA1A1B9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DE8A716-39A9-423D-9223-6933EA1A1B9A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {425AB5E7-90A0-468B-8BBF-AD727DBCB1F6}
+	EndGlobalSection
+EndGlobal
