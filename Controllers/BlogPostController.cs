@@ -25,19 +25,12 @@ namespace RubiconTask.Controllers
             BlogPostServiceManagement = new BlogPostServiceManagement(blogDBContext);
         }
 
-
-
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get([FromQuery] string tagName)
         {
-            return Ok(BlogPostServiceManagement.GetAllBlogPosts());
+            return Ok(BlogPostServiceManagement.GetBlogPosts(tagName));
         }
 
-        [HttpGet]
-        public IActionResult GetByTag([FromQuery] string tagName)
-        {
-            return Ok(BlogPostServiceManagement.GetBlogPostsByTagName(tagName));
-        }
         [HttpGet("{slug}")]
         public IActionResult GetBySlug(string slug)
         {

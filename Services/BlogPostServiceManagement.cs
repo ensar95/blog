@@ -22,164 +22,34 @@ namespace RubiconTask.Services
         {
         }
 
-
         public BlogPostServiceManagement(BlogDBContext blogDBContext)
         {
             BlogDBContext = blogDBContext;
         }
 
-        private void ValidateBlogPost(String slug)
-        {
-            BlogPost blogPost = BlogDBContext.BlogPosts.Where(b => b.Slug == slug).FirstOrDefault();
-            if (blogPost != null)
-            {
-                throw new DuplicateNameException();
-            }
-        }
+      
 
-        public BlogPostDto CreateBlogPost(CreateBlogPost createBlogPost)
-        {
-            if (createBlogPost.Title == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            BlogPost blogPost = new BlogPost
-            {
-                Title = createBlogPost.Title
-            };
-
-            SlugHelper slugHelper = new SlugHelper();
-            string Slug = slugHelper.GenerateSlug(createBlogPost.Title);
-
-            blogPost.Slug = Slug;
-            blogPost.Description = createBlogPost.Description;
-            blogPost.Body = createBlogPost.Body;
-            ValidateBlogPost(Slug);
-            List<string> TagList = new List<string>();
-
-
-            if (createBlogPost.TagList != null && createBlogPost.TagList.Count != 0)
-            {
-                for (int i = 0; i < createBlogPost.TagList.Count; i++)
-                {
-                    BlogPostTags blogPostTags = new BlogPostTags();
-                    TagList.Add(createBlogPost.TagList[i]);
-                    Tag Tag = BlogDBContext.Tags.Where(m => m.Name == TagList[i]).FirstOrDefault();
-                    blogPostTags.TagId = Tag.Id;
-                    blogPostTags.Tag = Tag;
-                    blogPost.BlogPostTags.Add(blogPostTags);
-                }
-            }
-
-
-            blogPost.CreatedAt = DateTime.Now;
-            blogPost.UpdatedAt = DateTime.Now;
-            BlogDBContext.BlogPosts.Add(blogPost);
-            BlogDBContext.SaveChanges();
-
-            BlogPostDto blogPostDto = new BlogPostDto
-            {
-                Slug = blogPost.Slug,
-                Title = blogPost.Title,
-                Description = blogPost.Description,
-                Body = blogPost.Body
-            };
-
-            for (int i = 0; i < TagList.Count; i++)
-            {
-                blogPostDto.TagList.Add(TagList[i]);
-            }
-
-            blogPostDto.CreatedAt = blogPost.CreatedAt;
-            blogPostDto.UpdatedAt = blogPost.UpdatedAt;
-            return blogPostDto;
-        }
-
-        public List<BlogPostDto> GetBlogPostsByTagName(string tagName)
-        {
-            List<BlogPostTags> blogPostTags = new List<BlogPostTags>();
-            List<BlogPost> blogPosts = BlogDBContext.BlogPosts.ToList();
-            List<BlogPostDto> blogPostDtos = new List<BlogPostDto>();
-            for (int i = 0; i < blogPosts.Count(); i++)
-            {
-                int v = blogPosts[i].BlogPostTags.Count();
-                for (int j = 0; j < v; j++)
-                {
-                    BlogPostTags blogPostTag = blogPosts[i].BlogPostTags[j];
-                    blogPostTags.Add(blogPostTag);
-                    if (blogPostTag.Tag.Name == tagName)
-                    {
-                        BlogPostDto blogPostDto = new BlogPostDto();
-                        blogPostDto.Slug = blogPosts[i].Slug;
-                        blogPostDto.Title = blogPosts[i].Title;
-                        blogPostDto.Description = blogPosts[i].Description;
-                        blogPostDto.Body = blogPosts[i].Body;
-                        blogPostDto.CreatedAt = blogPosts[i].CreatedAt;
-                        blogPostDto.UpdatedAt = blogPosts[i].UpdatedAt;
-                        blogPostDtos.Add(blogPostDto);
-                    }
-                }
-            }
-            return blogPostDtos;
-
-        }
-
-        private List<BlogPostDto> GetBlogPosts()
-        {
-            List<BlogPost> blogPosts = BlogDBContext.BlogPosts.ToList();
-            List<BlogPostDto> blogPostDtos = new List<BlogPostDto>();
-
-            for (int i = 0; i < blogPosts.Count; i++)
-            {
-                BlogPost blogPost = blogPosts[i];
-                BlogPostDto blogPostDto = new BlogPostDto
-                {
-                    Slug = blogPost.Slug,
-                    Title = blogPost.Title,
-                    Description = blogPost.Description,
-                    Body = blogPost.Body
-                };
-                try
-                {
-                    if (blogPost.BlogPostTags.ToList() != null || blogPost.BlogPostTags.ToList().Count != 0)
-                    {
-                        List<BlogPostTags> blogPostTags = blogPost.BlogPostTags.ToList();
-                        foreach (BlogPostTags blog in blogPostTags)
-                        {
-                            blogPostDto.TagList.Add(blog.Tag.Name);
-                        }
-                    }
-                    blogPostDto.CreatedAt = blogPost.CreatedAt;
-                    blogPostDto.UpdatedAt = blogPost.UpdatedAt;
-                    blogPostDtos.Add(blogPostDto);
-
-                }
-                catch (ArgumentNullException)
-                {
-                    blogPostDto.CreatedAt = blogPost.CreatedAt;
-                    blogPostDto.UpdatedAt = blogPost.UpdatedAt;
-                    blogPostDtos.Add(blogPostDto);
-                }
-
-            }
-            return blogPostDtos;
-
-        }
-
-        public BlogPostList GetAllBlogPosts()
+        public BlogPostList GetBlogPosts(string tagName)
         {
             BlogPostList blogPostList = new BlogPostList();
-            blogPostList.BlogPostDtos = new List<BlogPostDto>();
-            List<BlogPostDto> postDtos = GetBlogPosts();
-            for (int i = 0; i < postDtos.Count(); i++)
+
+            if(tagName == null)
             {
-                blogPostList.BlogPostDtos.Add(postDtos[i]);
+                blogPostList.BlogPostDtos = BlogDBContext.BlogPosts
+                    .Select(x => MapFromDb(x))
+                    .ToList();
             }
-            blogPostList.NumberOfPosts = "Number of posts: " + blogPostList.BlogPostDtos.Count();
+            else
+            {
+                blogPostList.BlogPostDtos = BlogDBContext.BlogPostTags
+                .Where(x => x.Tag.Name == tagName)
+                .Select(x => MapFromDb(x.BlogPost))
+                .ToList();
+            }
+
             return blogPostList;
         }
-
+       
         public BlogPostDto GetBlogPostBySlug(string slug)
         {
             BlogPost blogPost = BlogDBContext.BlogPosts.Where(m => m.Slug == slug).FirstOrDefault();
@@ -187,13 +57,9 @@ namespace RubiconTask.Services
             {
                 throw new ArgumentException();
             }
-            BlogPostDto blogPostDto = new BlogPostDto();
-            blogPostDto.Slug = blogPost.Slug;
-            blogPostDto.Title = blogPost.Title;
-            blogPostDto.Description = blogPost.Description;
-            blogPostDto.Body = blogPost.Body;
-            blogPostDto.CreatedAt = blogPost.CreatedAt;
-            blogPostDto.UpdatedAt = blogPost.UpdatedAt;
+
+            BlogPostDto blogPostDto = MapFromDb(blogPost);
+            
             try
             {
                 if (blogPost.BlogPostTags.ToList() != null || blogPost.BlogPostTags.Count != 0)
@@ -211,7 +77,41 @@ namespace RubiconTask.Services
                 return blogPostDto;
             }
         }
+        public BlogPostDto CreateBlogPost(CreateBlogPost createBlogPost)
+        {
+            if (createBlogPost.Title == null)
+            {
+                throw new ArgumentNullException();
+            }
 
+            BlogPost blogPost = new BlogPost();
+
+            SlugHelper slugHelper = new SlugHelper();
+            string Slug = slugHelper.GenerateSlug(createBlogPost.Title);
+            ValidateBlogPost(Slug);
+
+            blogPost.Title = createBlogPost.Title;
+            blogPost.Slug = Slug;
+            blogPost.Description = createBlogPost.Description;
+            blogPost.Body = createBlogPost.Body;
+
+            blogPost.CreatedAt = DateTime.Now;
+            blogPost.UpdatedAt = DateTime.Now;
+            BlogDBContext.BlogPosts.Add(blogPost);
+            BlogDBContext.SaveChanges();
+
+            BlogPostDto blogPostDto = new BlogPostDto
+            {
+                Slug = blogPost.Slug,
+                Title = blogPost.Title,
+                Description = blogPost.Description,
+                Body = blogPost.Body
+            };
+
+            blogPostDto.CreatedAt = blogPost.CreatedAt;
+            blogPostDto.UpdatedAt = blogPost.UpdatedAt;
+            return blogPostDto;
+        }
         public BlogPostTagDto AssignTagToBlogPost(CreateBlogPostTag createBlogPostTag)
         {
             BlogPost blogPost = BlogDBContext.BlogPosts.Where(s => s.Id == createBlogPostTag.BlogPostId).FirstOrDefault();
@@ -270,5 +170,27 @@ namespace RubiconTask.Services
             BlogDBContext.BlogPosts.Remove(blogPost);
             BlogDBContext.SaveChanges();
         }
+
+        private static BlogPostDto MapFromDb(BlogPost blogPost)
+        {
+            BlogPostDto blogPostDto = new BlogPostDto();
+            blogPostDto.Slug = blogPost.Slug;
+            blogPostDto.Title = blogPost.Title;
+            blogPostDto.Description = blogPost.Description;
+            blogPostDto.Body = blogPost.Body;
+            blogPostDto.CreatedAt = blogPost.CreatedAt;
+            blogPostDto.UpdatedAt = blogPost.UpdatedAt;
+
+            return blogPostDto;
+        }
+        private void ValidateBlogPost(string slug)
+        {
+            BlogPost blogPost = BlogDBContext.BlogPosts.Where(b => b.Slug == slug).FirstOrDefault();
+            if (blogPost != null)
+            {
+                throw new DuplicateNameException();
+            }
+        }
+
     }
 }

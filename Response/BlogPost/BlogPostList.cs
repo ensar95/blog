@@ -8,6 +8,6 @@ namespace RubiconTask.Response.BlogPost
     public class BlogPostList
     {
         public List<BlogPostDto> BlogPostDtos { get; set; }
-        public string NumberOfPosts { get; set; }
+        public int NumberOfPosts { get { return BlogPostDtos.Count(); } }
     }
 }
