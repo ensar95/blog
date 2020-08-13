@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Blog.Database;
+using Microsoft.EntityFrameworkCore;
 using RubiconTask.Database.Models;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,8 @@ namespace RubiconTask.Database
                 .HasOne(m => m.Tag)
                 .WithMany(m => m.BlogPostTags)
                 .HasForeignKey(m => m.TagId);
+
+            Data.Seed(modelBuilder);
         }
     }
 }
